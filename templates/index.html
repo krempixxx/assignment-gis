@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+          integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+            integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+            crossorigin=""></script>
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+
+</head>
+<body>
+
+<div class='sidebar'>
+    <div class="obsfp">
+        <p>Latitude <input id="obsfp_lat" type="text" name="lat"/></p>
+        <p>Longitude <input id="obsfp_long" type="text" name="long"/></p>
+        <p>Radius <input id="obsfp_radius" type="number" step=100 name="radius"/></p>
+        {#        <p> Elevation <input id="obsfp_elevation" type="number" name="elevation"></p>#}
+        <input type="button" value="Show obstacles for point" onclick="showObstaclesForPoint()"/>
+    </div>
+    <div class="obsforroute">
+        {#        <p>Elevation <input id="obs_elevation" type="number" name="elevation"/></p>#}
+        <p>Radius <input id="obs_radius" type="number" step=0.001 name="radius"/></p>
+        <p> Routes
+            <select id="obs_route" name="routes" required="required">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+            </select>
+        </p>
+        <input type="button" value="Obstacles for route" onclick="obstaclesForRoute()"/>
+    </div>
+    <div class="roads">
+        <p>Radius <input id="road_rad" type="number" step=100 name="radius"/></p>
+        <p> Routes
+            <select id="road_route" name="routes" required="required">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+            </select>
+        </p>
+        <input type="button" value="Roads for route" onclick="roadsForRoute()"/>
+    </div>
+    <div class="aerodata">
+        <p> Regions
+            <select id="aero_region" name="region" required="required">
+                <option>BA</option>
+                <option>BB</option>
+                <option>KE</option>
+                <option>SVK</option>
+            </select>
+        </p>
+        <input type="button" value="Show all aero data" onclick="showAeroData()"/>
+    </div>
+</div>
+<div class='map' id="map">
+
+    <script>
+        function showObstaclesForPoint() {
+            console.log("POINTS ");
+
+            var requestData = {
+                "lat": $('input[id="obsfp_lat"]').val(),
+                "long": $('input[id="obsfp_long"]').val(),
+                "radius": $('input[id="obsfp_radius"]').val()
+                {#                "elevation": $('input[id="obsfp_elevation"]').val()#}
+            };
+            console.log("DATA  REQ " + JSON.stringify(requestData));
+            $.ajax({
+                url: "/obstaclefp",
+                data: requestData,
+                type: "POST"
+            }).done(function (data) {
+
+                var jsondata = JSON.parse(data);
+                console.log(JSON.stringify(jsondata.features));
+                L.geoJSON(jsondata.features).addTo(map);
+
+
+                {# style copied #}
+                var greenIcon = new L.Icon({
+                    iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+                L.marker([requestData.lat, requestData.long], {icon: greenIcon}).addTo(map)
+                    .bindPopup("DESIGNATED POINT").openPopup();
+            });
+
+        }
+    </script>
+
+    <script>
+        function obstaclesForRoute() {
+
+            var myStyle = {
+                "color": "#ff7800",
+                "weight": 5,
+                "opacity": 0.65
+            };
+            {#            {#}
+            {#    style: myStyle#}
+
+            var requestData = {
+                "routes": $('select[id="obs_route"]').val(),
+                "radius": $('input[id="obs_radius"]').val()
+                {#                "elevation": $('input[id="obs_elevation"]').val()#}
+            };
+            console.log("DATA  REQ " + JSON.stringify(requestData));
+             console.log("DATA  REQ " + requestData.routes);
+            $.ajax({
+                url: "/routedata",
+                data: requestData,
+                type: "POST"
+
+            }).done(function (data) {
+                console.log(data);
+                var jsondata = JSON.parse(data);
+                L.geoJSON(jsondata).addTo(map).bindPopup("Road").openPopup();
+
+            $.ajax({
+                url: "/obstacles",
+                data: requestData,
+                type: "POST"
+
+            }).done(function (data2) {
+
+                var jsondata = JSON.parse(data2);
+                L.geoJSON(jsondata.features).addTo(map);
+            });
+             });
+        }
+    </script>
+
+    <script>
+        function roadsForRoute() {
+            var requestData = {
+                "routes": $('select[id="road_route"]').val(),
+                "radius": $('input[id="road_rad"]').val()
+            };
+            console.log("DATA  REQ " + requestData.radius);
+$.ajax({
+                url: "/routedata",
+                data: requestData,
+                type: "POST"
+
+            }).done(function (data) {
+                console.log(data);
+                var jsondata = JSON.parse(data);
+                L.geoJSON(jsondata,{color: "#ff0000"}).addTo(map).bindPopup("main_road").openPopup();
+
+            console.log("DATA  REQ " + JSON.stringify(requestData));
+            $.ajax({
+                url: "/roads",
+                data: requestData,
+                type: "POST"
+            }).done(function (data2) {
+                var jsondata = JSON.parse(data2);
+                L.geoJSON(jsondata.features).addTo(map);
+
+            });
+     });
+        }
+    </script>
+
+    <script>
+        function showAeroData() {
+            var requestData = {
+                "region": $('select[id="aero_region"]').val(),
+            };
+            console.log("DATA  REQ " + JSON.stringify(requestData));
+            $.ajax({
+                url: "/airspacedata",
+                data: requestData,
+                type: "POST"
+            }).done(function (data) {
+                var jsondata = JSON.parse(data);
+                L.geoJSON(jsondata,{color: "#6ad6ff"}).addTo(map);
+
+
+            $.ajax({
+                url: "/aerodata",
+                data: requestData,
+                type: "POST"
+            }).done(function (data2) {
+                var jsondata = JSON.parse(data2);
+                L.geoJSON(jsondata.features,{color: "#ff1512"}).addTo(map);
+            });
+            });
+        }
+    </script>
+
+    <script>
+        var map = L.map('map').setView([48.829909, 19.759110], 7);
+
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoia3JlbXBpeHh4IiwiYSI6ImNqYWI1cmRpdzBwcGgyd3BlbGgxc3B3dG0ifQ.fwDvOJxcC1QMX9NoWftbrA', {
+            maxZoom: 18,
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+            'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            id: 'mapbox.streets'
+        }).addTo(map);
+    </script>
+
+</div>
+
+</body>
+</html>
