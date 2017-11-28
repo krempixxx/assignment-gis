@@ -8,12 +8,18 @@ This application shows aeronautical data on Slovakia map:
 - show aero data in airspace
 
 This is it in action:
+Show aero data in polygon
 
-![Screenshot](Aero_data.png)
+![Screenshot](Aero_data.PNG)
 
-![Screenshot](Roads_for_route.png)
-![Screenshot](Obstacles_for_route.png)
-![Screenshot](Obstacles_for_route.png)
+Roads for chosen route
+![Screenshot](Roads_for_route.PNG)
+
+Obstacle for chosen route
+![Screenshot](Obstacles_for_route.PNG)
+
+Obstacles for chosen point
+![Screenshot](Obstacles_for_point.PNG)
 
 
 # Frontend
